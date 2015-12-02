@@ -1,37 +1,37 @@
-CREATE DATABASE IF NOT EXISTS ManagementAppDB;
+CREATE DATABASE IF NOT EXISTS Management_App_DB;
+drop DATABASE Management_App_DB
 
 
 
 -- Table GroupsTable
-CREATE TABLE GroupsTable (
-    groupID int  NOT NULL  AUTO_INCREMENT,
-    name varchar(255)  NOT NULL,
-    PRIMARY KEY (GroupID)
+CREATE TABLE groups (
+    id int  NOT NULL  AUTO_INCREMENT,
+    name varchar(255)  NOT NULL UNIQUE,
+    PRIMARY KEY (id)
 );
 
 -- Table RolesTable
-CREATE TABLE RolesTable (
-    roleID int  NOT NULL  AUTO_INCREMENT,
-    role varchar(255)  NOT NULL,
-    PRIMARY KEY (RoleID)
+CREATE TABLE roles (
+    id int  NOT NULL  AUTO_INCREMENT,
+    role_name varchar(255)  NOT NULL UNIQUE,
+    PRIMARY KEY (id)
 );
 
 -- Table UsersTable
-CREATE TABLE UsersTable (
-    userID int  NOT NULL  AUTO_INCREMENT,
-    userName varchar(255)  NOT NULL UNIQUE,
+CREATE TABLE users (
+    id int  NOT NULL  AUTO_INCREMENT,
+    user_name varchar(255)  NOT NULL UNIQUE,
     email varchar(255)  NOT NULL UNIQUE,
-    PRIMARY KEY (UserID)
+    group_id int NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (group_id) REFERENCES groups(id)
 );
 
--- Table MembeshipsTable
-CREATE TABLE MembeshipsTable (
-    membershipID int  NOT NULL  AUTO_INCREMENT,
-    userID int  NOT NULL,
-    groupID int  NOT NULL,
-    roleID int  NOT NULL,
-    PRIMARY KEY (membershipID,userID,groupID),
-    FOREIGN KEY (userID) REFERENCES UsersTable(userID),
-    FOREIGN KEY (groupID) REFERENCES GroupsTable(groupID),
-    FOREIGN KEY (roleID) REFERENCES RolesTable(roleID)
+-- Table GroupsRolesTable
+CREATE TABLE group_role (
+    group_id int  NOT NULL,
+    role_id int  NOT NULL,
+    PRIMARY KEY (group_id, role_id),
+    FOREIGN KEY (group_id) REFERENCES groups(id),
+    FOREIGN KEY (role_id) REFERENCES roles(id)
 );
