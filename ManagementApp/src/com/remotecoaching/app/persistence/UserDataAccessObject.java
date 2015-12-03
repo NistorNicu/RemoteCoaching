@@ -1,5 +1,6 @@
 package com.remotecoaching.app.persistence;
 
+import java.io.NotActiveException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -9,6 +10,7 @@ import java.util.List;
 import com.mysql.jdbc.Connection;
 import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException;
 import com.remotecoaching.app.exceptions.EntityNotFoundException;
+import com.remotecoaching.app.exceptions.NotValidEmailException;
 import com.remotecoaching.app.models.Group;
 import com.remotecoaching.app.models.User;
 
@@ -76,6 +78,9 @@ public class UserDataAccessObject implements DataAccessObjectGenericInterface<Us
 			
 		} catch (SQLException e) {
 			e.printStackTrace();
+		} catch (NotValidEmailException e) {
+			System.out.println(e.getMessage());
+			e.printStackTrace();
 		}finally {
 			DataBaseUtillity.close(connection);
 			DataBaseUtillity.close(statement);
@@ -109,6 +114,9 @@ public class UserDataAccessObject implements DataAccessObjectGenericInterface<Us
 			}
 			
 		} catch (SQLException | EntityNotFoundException e) {
+			System.out.println(e.getMessage());
+			e.printStackTrace();
+		} catch (NotValidEmailException e) {
 			System.out.println(e.getMessage());
 			e.printStackTrace();
 		}finally {
