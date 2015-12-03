@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.mysql.jdbc.Connection;
+import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException;
+import com.remotecoaching.app.exceptions.EntityNotFoundException;
 import com.remotecoaching.app.models.Group;
 import com.remotecoaching.app.models.Role;
 
@@ -32,6 +34,9 @@ public class GroupDataAccessObject implements DataAccessObjectGenericInterface<G
 				+ "WHERE name=?";
 		
 		try {
+//			if (newInstance.getRoles().isEmpty()){
+//				throw new Exception("Group roles cannot be empty");
+//			}
 			connection = MyDataSource.getInstance().getConnection();
 			connection.setAutoCommit(false);
 			groupInsertStatement = connection.prepareStatement(groupsInsertString);
@@ -47,22 +52,39 @@ public class GroupDataAccessObject implements DataAccessObjectGenericInterface<G
 					
 					System.out.println(e.getMessage());
 					connection.rollback();
-					// TODO: handle group role already exists in db
 				}finally {
 					DataBaseUtillity.close(updateGroupRolesTableStatement);
 				}
 			}
 			connection.commit();
 			
+		}catch (MySQLIntegrityConstraintViolationException e) {
+			System.out.println(e.getMessage());
+			int errCode = e.getErrorCode();
+			if (errCode == 1062){
+				System.out.println("Group with name " + newInstance.getName() + " already exists");
+			}else if (errCode == 1048){
+				System.out.println("Group name cannot de null");
+			}
+			//e.printStackTrace();
 		} catch (SQLException e) {
+			System.out.println(e.getMessage());
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}catch (Exception e) {
+			System.out.println(e.getMessage());
+			// TODO Auto-generated catch block
+			//e.printStackTrace();
 		}finally {
 			try {
 				connection.setAutoCommit(true);
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+			}catch (Exception e) {
+				System.out.println(e.getMessage());
+				// TODO Auto-generated catch block
+				//e.printStackTrace();
 			}
 			DataBaseUtillity.close(connection);
 		}
@@ -70,13 +92,14 @@ public class GroupDataAccessObject implements DataAccessObjectGenericInterface<G
 	}
 
 	@Override
-	public Group get(Integer id) {
+	public Group get(Integer id) throws EntityNotFoundException {
 		Connection connection = null;
 		ResultSet groupsResultSet = null;
 		ResultSet groupRolesResultSet = null;
 		PreparedStatement groupQueryStatement = null;
 		PreparedStatement groupRolesQueryStatement = null;
 		Group group =null;
+		Role role= null;
 		String query = "SELECT * from groups"
 				+ " WHERE id=?";
 		String groupRolesQuery = "SELECT roles.* FROM roles "
@@ -91,9 +114,7 @@ public class GroupDataAccessObject implements DataAccessObjectGenericInterface<G
 			connection.setAutoCommit(false);
 			groupQueryStatement = connection.prepareStatement(query);
 			groupQueryStatement.setInt(1, id);
-			groupsResultSet = groupQueryStatement.executeQuery();
-			
-			
+			groupsResultSet = groupQueryStatement.executeQuery();			
 			if (groupsResultSet.next()){
 				group = new Group();
 				group.setId(id);
@@ -102,13 +123,13 @@ public class GroupDataAccessObject implements DataAccessObjectGenericInterface<G
 				groupRolesQueryStatement.setInt(1, id);
 				groupRolesResultSet = groupRolesQueryStatement.executeQuery();
 				while(groupRolesResultSet.next()){
-					Role role = new Role();
+					role = new Role();
 					role.setId(groupRolesResultSet.getInt("id"));
 					role.setName(groupRolesResultSet.getString("role_name"));
 					group.getRoles().add(role);
 				}
 			}else {
-				//TODO handle no group for id in db
+				throw new EntityNotFoundException("No group found for ID " + id);
 			}
 			connection.commit();
 			
@@ -137,6 +158,7 @@ public class GroupDataAccessObject implements DataAccessObjectGenericInterface<G
 		PreparedStatement groupQueryStatement = null;
 		PreparedStatement groupRolesQueryStatement = null;
 		Group group =null;
+		Role role = null;
 		String query = "SELECT * from groups";
 		String groupRolesQuery = "SELECT roles.* FROM roles "
 				+ "INNER JOIN "
@@ -160,7 +182,7 @@ public class GroupDataAccessObject implements DataAccessObjectGenericInterface<G
 				groupRolesQueryStatement.setInt(1, group.getId());
 				groupRolesResultSet = groupRolesQueryStatement.executeQuery();
 				while(groupRolesResultSet.next()){
-					Role role = new Role();
+					role = new Role();
 					role.setId(groupRolesResultSet.getInt("id"));
 					role.setName(groupRolesResultSet.getString("role_name"));
 					group.getRoles().add(role);
@@ -194,28 +216,27 @@ public class GroupDataAccessObject implements DataAccessObjectGenericInterface<G
 				+ "WHERE id=?";								
 		try {
 			connection = MyDataSource.getInstance().getConnection();
-			connection.setAutoCommit(false);
 			groupQueryStatement = connection.prepareStatement(query);
 			groupQueryStatement.setString(1, updatedInstance.getName());
 			groupQueryStatement.setInt(2, updatedInstance.getId());
 			groupQueryStatement.executeUpdate();
-			
 			updateGroupRoles(updatedInstance);
 			
 			
-			connection.commit();
 			
 			
+		}catch (MySQLIntegrityConstraintViolationException e) {
+			System.out.println(e.getMessage());
+			int errCode = e.getErrorCode();
+			if (errCode == 1062){
+				System.out.println("Group with name " + updatedInstance.getName() + " already exists");
+			}else if (errCode == 1048){
+				System.out.println("Group name cannot de null");
+			}
+			//e.printStackTrace();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			System.out.println(e.getMessage());
 		}finally {
-			try {
-				connection.setAutoCommit(true);
-			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				System.out.println(e.getMessage());
-			}
 			DataBaseUtillity.close(connection);
 		}
 		
@@ -233,7 +254,7 @@ public class GroupDataAccessObject implements DataAccessObjectGenericInterface<G
 	public void delete(Integer instanceToDeleteID) {
 		Connection connection = null;
 		PreparedStatement statement = null;
-		String query = "DELETE FROM groups"
+		String query = "DELETE FROM groups "
 				+ "WHERE id=?";
 		try {
 			connection = MyDataSource.getInstance().getConnection();
@@ -271,11 +292,11 @@ public class GroupDataAccessObject implements DataAccessObjectGenericInterface<G
 					deleteGroupRole(updatedInstance, roleId);
 				}else{
 					roles.remove(new Role(roleId));
-				}
-				if (!roles.isEmpty()){
-					for(Role r : roles){
-						addRoleToGroup(updatedInstance, r);
-					}
+				}	
+			}
+			if (!roles.isEmpty()){
+				for(Role r : roles){
+					addRoleToGroup(updatedInstance, r);
 				}
 			}
 			
@@ -290,14 +311,17 @@ public class GroupDataAccessObject implements DataAccessObjectGenericInterface<G
 		Connection databaseConection = MyDataSource.getInstance().getConnection();
 		PreparedStatement insertGroupRoleStatement = null;
 		String insertGroupRoleSql = "INSERT INTO group_role "
-				+ "group_id, role_id VALUES "
-				+ "?,?";
+				+ "(group_id, role_id) VALUES "
+				+ "(?,?)";
 		try {
 			insertGroupRoleStatement = databaseConection.prepareStatement(insertGroupRoleSql);
 			insertGroupRoleStatement.setInt(1, groupToAddRole.getId());
 			insertGroupRoleStatement.setInt(2, role.getId());
 			insertGroupRoleStatement.executeUpdate();
-		} catch (SQLException e) {
+		}catch (MySQLIntegrityConstraintViolationException e) {
+			System.out.println(e.getMessage());
+			//e.printStackTrace();
+		}  catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} 
@@ -307,7 +331,7 @@ public class GroupDataAccessObject implements DataAccessObjectGenericInterface<G
 	private void deleteGroupRole(Group groupToDeleteRole, int roleToDeleteId) {
 		Connection databaseConection = MyDataSource.getInstance().getConnection();
 		PreparedStatement deleteGroupRoleStatement = null;
-		String deleteGroupRoleSql = "DELETE FROM group_role"
+		String deleteGroupRoleSql = "DELETE FROM group_role "
 				+ "WHERE group_id=? "
 				+ "AND 	 role_id=?";
 		try {

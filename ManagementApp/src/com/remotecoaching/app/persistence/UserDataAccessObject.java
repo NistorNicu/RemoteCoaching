@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.mysql.jdbc.Connection;
+import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException;
+import com.remotecoaching.app.exceptions.EntityNotFoundException;
 import com.remotecoaching.app.models.Group;
 import com.remotecoaching.app.models.User;
 
@@ -18,9 +20,9 @@ public class UserDataAccessObject implements DataAccessObjectGenericInterface<Us
 	public void create(User newInstance) {
 		Connection connection= null;
 		PreparedStatement statement = null;
-		String query = "INSERT INTO users"
-				+ "user_name, email, group_id VALUES "
-				+ "?,?,?";	
+		String query = "INSERT INTO users "
+				+ "(user_name, email, group_id) VALUES "
+				+ "(?, ?, ?)";	
 		try {
 			connection = MyDataSource.getInstance().getConnection();
 			statement = connection.prepareStatement(query);
@@ -28,8 +30,17 @@ public class UserDataAccessObject implements DataAccessObjectGenericInterface<Us
 			statement.setString(2, newInstance.getEmail());
 			statement.setInt(3, newInstance.getGroup().getId());
 			statement .executeUpdate();
+		}catch (MySQLIntegrityConstraintViolationException e) {
+			System.out.println(e.getMessage());
+			int errCode = e.getErrorCode();
+			if (errCode == 1062){
+				System.out.println("username or email already exists");
+			}else if (errCode == 1048){
+				System.out.println("username or email cannot de null");
+			}
+			//e.printStackTrace();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
+			System.out.println(e.getMessage());
 			e.printStackTrace();
 		}finally {
 			DataBaseUtillity.close(connection);
@@ -39,7 +50,7 @@ public class UserDataAccessObject implements DataAccessObjectGenericInterface<Us
 	}
 
 	@Override
-	public User get(Integer id) {
+	public User get(Integer id) throws EntityNotFoundException {
 		GroupDataAccessObject groupDataAccessObject = new GroupDataAccessObject();
 		Connection connection= null;
 		PreparedStatement statement = null;
@@ -59,12 +70,11 @@ public class UserDataAccessObject implements DataAccessObjectGenericInterface<Us
 				user.setEmail(resultSet.getString("email"));
 				user.setGroup(new Group(resultSet.getInt("group_id"))); 
 			}else {
-				//TODO handle no role for id in db
+				throw new EntityNotFoundException("No User found for ID " + id);
 			}
 			user.setGroup(groupDataAccessObject.get(user.getGroup().getId()));
 			
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}finally {
 			DataBaseUtillity.close(connection);
@@ -98,8 +108,8 @@ public class UserDataAccessObject implements DataAccessObjectGenericInterface<Us
 				u.setGroup(groupDataAccessObject.get(u.getGroup().getId()));
 			}
 			
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
+		} catch (SQLException | EntityNotFoundException e) {
+			System.out.println(e.getMessage());
 			e.printStackTrace();
 		}finally {
 			DataBaseUtillity.close(connection);
@@ -123,8 +133,17 @@ public class UserDataAccessObject implements DataAccessObjectGenericInterface<Us
 			statement.setInt(3, updatedInstance.getGroup().getId());
 			statement.setInt(4, updatedInstance.getId());
 			statement .executeUpdate();
+		} catch (MySQLIntegrityConstraintViolationException e) {
+			System.out.println(e.getMessage());
+			int errCode = e.getErrorCode();
+			if (errCode == 1062){
+				System.out.println("username or email already exists");
+			}else if (errCode == 1048){
+				System.out.println("username or email cannot de null");
+			}
+			//e.printStackTrace();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
+			System.out.println(e.getMessage());
 			e.printStackTrace();
 		}finally {
 			DataBaseUtillity.close(connection);
@@ -146,15 +165,20 @@ public class UserDataAccessObject implements DataAccessObjectGenericInterface<Us
 	public void delete(Integer instanceToDeleteID) {
 		Connection connection= null;
 		PreparedStatement statement = null;
-		String query = "DELETE FROM users"
+		String query = "DELETE FROM users "
 				+ "WHERE id=?";
 		try {
 			connection = MyDataSource.getInstance().getConnection();
 			statement = connection.prepareStatement(query);
 			statement.setInt(1, instanceToDeleteID);
-			statement .executeUpdate();
+			if(statement .executeUpdate()==0){
+				throw new Exception("No user to delete for ID "+ instanceToDeleteID);
+			}
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}catch (Exception e) {
+			System.out.println(e.getMessage());
 			e.printStackTrace();
 		}finally {
 			DataBaseUtillity.close(connection);

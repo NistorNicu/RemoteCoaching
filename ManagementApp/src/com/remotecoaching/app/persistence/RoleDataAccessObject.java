@@ -8,6 +8,7 @@ import java.util.List;
 
 import com.mysql.jdbc.Connection;
 import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException;
+import com.remotecoaching.app.exceptions.EntityNotFoundException;
 import com.remotecoaching.app.models.Role;
 
 public class RoleDataAccessObject implements DataAccessObjectGenericInterface<Role, Integer> {
@@ -44,7 +45,7 @@ public class RoleDataAccessObject implements DataAccessObjectGenericInterface<Ro
 	}
 
 	@Override
-	public Role get(Integer id) {
+	public Role get(Integer id) throws EntityNotFoundException {
 		Connection connection = null;
 		PreparedStatement statement = null;
 		ResultSet resultSet = null;
@@ -63,18 +64,19 @@ public class RoleDataAccessObject implements DataAccessObjectGenericInterface<Ro
 				role.setId(id);
 				role.setName(resultSet.getString("role_name"));
 			}else {
-				//TODO handle no role for id in db
+				throw new EntityNotFoundException("No role found for ID " + id);
 			}
 			
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}finally {
+		} finally {
 			DataBaseUtillity.close(connection);
 			DataBaseUtillity.close(statement);
 		}
 		return role;
 	}
+	
 
 	@Override
 	public List<Role> getAll() {
@@ -121,8 +123,13 @@ public class RoleDataAccessObject implements DataAccessObjectGenericInterface<Ro
 			statement = connection.prepareStatement(query);
 			statement.setString(1, updatedInstance.getName());
 			statement.setInt(2, updatedInstance.getId());
-			statement .executeUpdate();
+			if (statement .executeUpdate()==0){
+				throw new Exception("No role to update for ID " + updatedInstance.getId());
+			}
 		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}finally {
@@ -185,9 +192,6 @@ public class RoleDataAccessObject implements DataAccessObjectGenericInterface<Ro
 			DataBaseUtillity.close(connection);
 			DataBaseUtillity.close(statement);
 		}
-		
-		
-		
 	}
 
 }

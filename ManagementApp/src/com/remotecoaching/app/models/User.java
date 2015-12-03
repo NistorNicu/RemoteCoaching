@@ -5,7 +5,7 @@ public class User {
 	private int id;
 	private String userName;
 	private String email;
-	private Group group;
+	private Group group = new Group();
 	
 	public User(){
 	}
@@ -51,6 +51,12 @@ public class User {
 	public void setEmail(String email) {
 		this.email = email;
 	}
+
+	@Override
+	public String toString() {
+		return "User [id=" + id + ", userName=" + userName + ", email=" + email + ", group=" + group + "]";
+	}
+	
 	
 	
 }
