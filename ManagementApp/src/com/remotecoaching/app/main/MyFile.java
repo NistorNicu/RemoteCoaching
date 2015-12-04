@@ -8,7 +8,7 @@ public class MyFile implements File {
 	@Override
 	public void exists() {
 		try {
-			if (Session.getInstance().checkPermission(Session.PERMISSION_WRITE)) {
+			if (Session.getInstance().checkPermission(Session.PERMISSION_EXIST)) {
 				System.out.println("Checking if exists");
 			} else {
 				System.out.println("Current user have no permission for this operation");
