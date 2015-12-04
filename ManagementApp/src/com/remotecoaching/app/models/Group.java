@@ -1,15 +1,16 @@
 package com.remotecoaching.app.models;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class Group {
 	private int id;
 	private String name;
-	private List<Role> roles;
+	private Set<Role> roles = new HashSet<>() ;
 
 	public Group() {
-		roles = new ArrayList<>();
 	}
 
 	public Group(int id) {
@@ -17,18 +18,18 @@ public class Group {
 		this.id = id;
 	}
 
-	public Group(int id, String name, List<Role> roles) {
+	public Group(int id, String name, Set<Role> roles) {
 		super();
 		this.id = id;
 		this.name = name;
 		this.roles = roles;
 	}
 
-	public List<Role> getRoles() {
+	public Set<Role> getRoles() {
 		return roles;
 	}
 
-	public void setRoles(List<Role> roles) {
+	public void setRoles(Set<Role> roles) {
 		this.roles = roles;
 	}
 

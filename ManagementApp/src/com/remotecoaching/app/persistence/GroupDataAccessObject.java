@@ -5,6 +5,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import com.mysql.jdbc.Connection;
 import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException;
@@ -234,7 +235,7 @@ public class GroupDataAccessObject implements DataAccessObjectGenericInterface<G
 
 	private void updateGroupRoles(Group updatedInstance) {
 		Connection connection = MyDataSource.getInstance().getConnection();
-		List<Role> roles = updatedInstance.getRoles();
+		Set<Role> roles = updatedInstance.getRoles();
 		PreparedStatement groupRolesQueryStatement = null;
 		ResultSet groupRolesIDResultSet = null;
 		String groupRolesQuery = "SELECT roles.id FROM roles " + "INNER JOIN " + "group_role WHERE "

@@ -1,6 +1,7 @@
 package com.remotecoaching.app.main;
 
 import java.util.List;
+import java.util.Set;
 
 import com.remotecoaching.app.exceptions.SessionUninitializedException;
 import com.remotecoaching.app.models.Role;
@@ -28,7 +29,7 @@ public class Session {
 		return instance;
 	}
 
-	public List<Role> getSessionRoles() {
+	public Set<Role> getSessionRoles() {
 		return sessionUser.getGroup().getRoles();
 	}
 
