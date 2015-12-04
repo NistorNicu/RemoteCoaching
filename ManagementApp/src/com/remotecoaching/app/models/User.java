@@ -7,16 +7,15 @@ import java.util.regex.Pattern;
 import com.remotecoaching.app.exceptions.NotValidEmailException;
 
 public class User {
-	
+
 	private int id;
 	private String userName;
 	private String email;
 	private Group group = new Group();
-	private static final Pattern VALID_EMAIL_ADDRESS_REGEX = 
-		    Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
+	private static final Pattern VALID_EMAIL_ADDRESS_REGEX = Pattern
+			.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
 
-	
-	public User(){
+	public User() {
 	}
 
 	public User(int id, String userName, String email, Group group) {
@@ -26,8 +25,6 @@ public class User {
 		this.email = email;
 		this.group = group;
 	}
-	
-	
 
 	public Group getGroup() {
 		return group;
@@ -58,9 +55,9 @@ public class User {
 	}
 
 	public void setEmail(String email) throws NotValidEmailException {
-		if (validate(email)){
+		if (validate(email)) {
 			this.email = email;
-		}else {
+		} else {
 			throw new NotValidEmailException();
 		}
 	}
@@ -69,10 +66,10 @@ public class User {
 	public String toString() {
 		return "User [id=" + id + ", userName=" + userName + ", email=" + email + ", group=" + group + "]";
 	}
-	
+
 	private static boolean validate(String emailStr) {
-        Matcher matcher = VALID_EMAIL_ADDRESS_REGEX .matcher(emailStr);
-        return matcher.find();
-}
-	
+		Matcher matcher = VALID_EMAIL_ADDRESS_REGEX.matcher(emailStr);
+		return matcher.find();
+	}
+
 }

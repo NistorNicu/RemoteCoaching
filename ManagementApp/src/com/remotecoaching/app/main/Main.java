@@ -17,7 +17,7 @@ public class Main {
 		UserDataAccessObject userDataAccessObject = new UserDataAccessObject();
 		MyFile file = new MyFile();
 		List<User> usersList = userDataAccessObject.getAll();
-		for (User user : usersList){
+		for (User user : usersList) {
 			System.out.println(user);
 			Session.startSession(user);
 			file.exists();
@@ -25,6 +25,5 @@ public class Main {
 			file.write();
 		}
 	}
-	
 
 }

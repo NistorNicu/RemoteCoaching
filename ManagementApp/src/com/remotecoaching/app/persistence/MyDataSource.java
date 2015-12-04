@@ -11,34 +11,33 @@ public class MyDataSource {
 	private String url = "jdbc:mysql://localhost:3306/management_app_db";
 	private String username = "root";
 	private String password = "";
+
 	private MyDataSource() {
 	}
-	
-	
-	public static MyDataSource getInstance(){
+
+	public static MyDataSource getInstance() {
 		return instance;
 	}
-	
-	public Connection getConnection(){
+
+	public Connection getConnection() {
 		try {
-			Class.forName ("com.mysql.jdbc.Driver").newInstance ();
-			connection = (Connection) DriverManager.getConnection (url, username, password);
+			Class.forName("com.mysql.jdbc.Driver").newInstance();
+			connection = (Connection) DriverManager.getConnection(url, username, password);
 			System.out.println("Conected");
 		} catch (SQLException | InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-			// TODO Auto-generated catch block
+			System.out.println(e.getMessage());
 			e.printStackTrace();
 		}
 		return connection;
 	}
-	
-	public void diconnect(){
+
+	public void diconnect() {
 		try {
 			connection.close();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
+			System.out.println(e.getMessage());
 			e.printStackTrace();
 		}
 	}
-	
-	
+
 }

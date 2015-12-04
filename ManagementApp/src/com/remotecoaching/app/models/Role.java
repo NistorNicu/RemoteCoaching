@@ -1,18 +1,16 @@
 package com.remotecoaching.app.models;
 
 public class Role {
-	private int id; 
-	private String name; 
-	
-	
-	public Role(){	
+	private int id;
+	private String name;
+
+	public Role() {
 	}
-	
+
 	public Role(int id) {
 		super();
 		this.id = id;
 	}
-
 
 	public Role(int id, String name) {
 		super();
@@ -62,6 +60,5 @@ public class Role {
 			return false;
 		return true;
 	}
-	
-	
+
 }

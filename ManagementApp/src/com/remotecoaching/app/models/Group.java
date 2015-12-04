@@ -7,11 +7,11 @@ public class Group {
 	private int id;
 	private String name;
 	private List<Role> roles;
-	
-	public Group(){
+
+	public Group() {
 		roles = new ArrayList<>();
 	}
-	
+
 	public Group(int id) {
 		super();
 		this.id = id;
@@ -23,8 +23,6 @@ public class Group {
 		this.name = name;
 		this.roles = roles;
 	}
-	
-	
 
 	public List<Role> getRoles() {
 		return roles;
@@ -54,7 +52,5 @@ public class Group {
 	public String toString() {
 		return "Group [id=" + id + ", name=" + name + ", roles=" + roles + "]";
 	}
-	
-	
 
 }
