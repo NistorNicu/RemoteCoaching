@@ -14,19 +14,25 @@ import com.remotecoaching.app.models.Role;
 public class RoleDataAccessObject implements DataAccessObjectGenericInterface<Role, Integer> {
 
 	@Override
-	public void create(Role newInstance) {
+	public Role create(Role newInstance) {
 		Connection connection = null;
+		Role role = new Role();
 		PreparedStatement statement = null;
 		String query = "INSERT INTO roles" + "(role_name) VALUES" + "(?)";
+		String newIdQuery = "SELECT id form roles where role_name=?";
 		try {
 			connection = MyDataSource.getInstance().getConnection();
 			statement = connection.prepareStatement(query);
 			statement.setString(1, newInstance.getName());
-
 			statement.executeUpdate();
+			role = getByName(newInstance.getName());
+			
 		} catch (MySQLIntegrityConstraintViolationException e) {
 			System.out.println(e.getMessage());
 			System.out.println("Role name already exists");
+			try {
+				role = getByName(newInstance.getName());
+			} catch (EntityNotFoundException e1) {	}
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
 			e.printStackTrace();
@@ -34,10 +40,14 @@ public class RoleDataAccessObject implements DataAccessObjectGenericInterface<Ro
 			System.out.println(e.getMessage());
 			System.out.println("Cannot create a null Role");
 			e.printStackTrace();
+		} catch (EntityNotFoundException e) {
+			System.out.println("Something went wrong on create");
+			e.printStackTrace();
 		} finally {
 			DataBaseUtillity.close(connection);
 			DataBaseUtillity.close(statement);
 		}
+		return role;
 
 	}
 
@@ -61,6 +71,38 @@ public class RoleDataAccessObject implements DataAccessObjectGenericInterface<Ro
 				role.setName(resultSet.getString("role_name"));
 			} else {
 				throw new EntityNotFoundException("No role found for ID " + id);
+			}
+
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+			e.printStackTrace();
+		} finally {
+			DataBaseUtillity.close(connection);
+			DataBaseUtillity.close(statement);
+		}
+		return role;
+	}
+
+	@Override
+	public Role getByName(String name) throws EntityNotFoundException {
+		Connection connection = null;
+		PreparedStatement statement = null;
+		ResultSet resultSet = null;
+		Role role = null;
+		String query = "SELECT * from roles" + " WHERE role_name=?";
+		try {
+			connection = MyDataSource.getInstance().getConnection();
+			statement = connection.prepareStatement(query);
+			statement.setString(1, name);
+
+			resultSet = statement.executeQuery();
+
+			if (resultSet.next()) {
+				role = new Role();
+				role.setId(resultSet.getInt("id"));
+				role.setName(resultSet.getString("role_name"));
+			} else {
+				throw new EntityNotFoundException("No role found for name " + name);
 			}
 
 		} catch (SQLException e) {

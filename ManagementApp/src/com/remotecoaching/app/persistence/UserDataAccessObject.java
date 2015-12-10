@@ -17,9 +17,10 @@ import com.remotecoaching.app.models.User;
 public class UserDataAccessObject implements DataAccessObjectGenericInterface<User, Integer> {
 
 	@Override
-	public void create(User newInstance) {
+	public User create(User newInstance) {
 		Connection connection = null;
 		PreparedStatement statement = null;
+		User user = new User();
 		String query = "INSERT INTO users " + "(user_name, email, group_id) VALUES " + "(?, ?, ?)";
 		try {
 			connection = MyDataSource.getInstance().getConnection();
@@ -28,6 +29,7 @@ public class UserDataAccessObject implements DataAccessObjectGenericInterface<Us
 			statement.setString(2, newInstance.getEmail());
 			statement.setInt(3, newInstance.getGroup().getId());
 			statement.executeUpdate();
+			user = getByName(newInstance.getUserName());
 		} catch (MySQLIntegrityConstraintViolationException e) {
 			System.out.println(e.getMessage());
 			int errCode = e.getErrorCode();
@@ -40,9 +42,13 @@ public class UserDataAccessObject implements DataAccessObjectGenericInterface<Us
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
 			e.printStackTrace();
+		} catch (EntityNotFoundException e) {
+			System.out.println(e.getMessage());
+			e.printStackTrace();
 		} finally {
 			DataBaseUtillity.close(connection);
 		}
+		return null;
 
 	}
 
@@ -67,6 +73,42 @@ public class UserDataAccessObject implements DataAccessObjectGenericInterface<Us
 				user.setGroup(new Group(resultSet.getInt("group_id")));
 			} else {
 				throw new EntityNotFoundException("No User found for ID " + id);
+			}
+			user.setGroup(groupDataAccessObject.get(user.getGroup().getId()));
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} catch (NotValidEmailException e) {
+			System.out.println(e.getMessage());
+			e.printStackTrace();
+		} finally {
+			DataBaseUtillity.close(connection);
+			DataBaseUtillity.close(statement);
+		}
+		return user;
+	}
+
+	@Override
+	public User getByName(String name) throws EntityNotFoundException {
+		GroupDataAccessObject groupDataAccessObject = new GroupDataAccessObject();
+		Connection connection = null;
+		PreparedStatement statement = null;
+		ResultSet resultSet = null;
+		User user = null;
+		String query = "SELECT * from users" + " WHERE user_name=?";
+		try {
+			connection = MyDataSource.getInstance().getConnection();
+			statement = connection.prepareStatement(query);
+			statement.setString(1, name);
+			resultSet = statement.executeQuery();
+			if (resultSet.next()) {
+				user = new User();
+				user.setId(resultSet.getInt("id"));
+				user.setUserName(resultSet.getString("user_name"));
+				user.setEmail(resultSet.getString("email"));
+				user.setGroup(new Group(resultSet.getInt("group_id")));
+			} else {
+				throw new EntityNotFoundException("No User found for name " + name);
 			}
 			user.setGroup(groupDataAccessObject.get(user.getGroup().getId()));
 

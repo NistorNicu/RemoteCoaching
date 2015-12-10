@@ -16,11 +16,11 @@ import com.remotecoaching.app.models.Role;
 public class GroupDataAccessObject implements DataAccessObjectGenericInterface<Group, Integer> {
 
 	@Override
-	public void create(Group newInstance) {
+	public Group create(Group newInstance) {
 		Connection connection = null;
 		PreparedStatement groupInsertStatement = null;
 		PreparedStatement updateGroupRolesTableStatement = null;
-
+		Group group = new Group();
 		String groupsInsertString = "INSERT INTO groups" + "(name) VALUES" + "(?)";
 		String groupRolesInsertString = "INSERT INTO group_role " + "(group_id, role_id) " + "SELECT id, ? "
 				+ "FROM groups " + "WHERE name=?";
@@ -49,6 +49,7 @@ public class GroupDataAccessObject implements DataAccessObjectGenericInterface<G
 				}
 			}
 			connection.commit();
+			group = getByName(newInstance.getName());
 
 		} catch (MySQLIntegrityConstraintViolationException e) {
 			System.out.println(e.getMessage());
@@ -75,6 +76,7 @@ public class GroupDataAccessObject implements DataAccessObjectGenericInterface<G
 			}
 			DataBaseUtillity.close(connection);
 		}
+		return group;
 
 	}
 
@@ -112,6 +114,56 @@ public class GroupDataAccessObject implements DataAccessObjectGenericInterface<G
 				}
 			} else {
 				throw new EntityNotFoundException("No group found for ID " + id);
+			}
+			connection.commit();
+
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		} finally {
+			try {
+				connection.setAutoCommit(true);
+			} catch (SQLException e) {
+				System.out.println(e.getMessage());
+			}
+			DataBaseUtillity.close(connection);
+		}
+		return group;
+	}
+
+	@Override
+	public Group getByName(String name) throws EntityNotFoundException {
+		Connection connection = null;
+		ResultSet groupsResultSet = null;
+		ResultSet groupRolesResultSet = null;
+		PreparedStatement groupQueryStatement = null;
+		PreparedStatement groupRolesQueryStatement = null;
+		Group group = null;
+		Role role = null;
+		String query = "SELECT * from groups" + " WHERE name=?";
+		String groupRolesQuery = "SELECT roles.* FROM roles " + "INNER JOIN " + "group_role WHERE "
+				+ "group_role.group_id =? AND " + "group_role.role_id=roles.id";
+
+		try {
+			connection = MyDataSource.getInstance().getConnection();
+			connection.setAutoCommit(false);
+			groupQueryStatement = connection.prepareStatement(query);
+			groupQueryStatement.setString(1, name);
+			groupsResultSet = groupQueryStatement.executeQuery();
+			if (groupsResultSet.next()) {
+				group = new Group();
+				group.setId(groupsResultSet.getInt("id"));
+				group.setName(groupsResultSet.getString("name"));
+				groupRolesQueryStatement = connection.prepareStatement(groupRolesQuery);
+				groupRolesQueryStatement.setInt(1, groupsResultSet.getInt("id"));
+				groupRolesResultSet = groupRolesQueryStatement.executeQuery();
+				while (groupRolesResultSet.next()) {
+					role = new Role();
+					role.setId(groupRolesResultSet.getInt("id"));
+					role.setName(groupRolesResultSet.getString("role_name"));
+					group.getRoles().add(role);
+				}
+			} else {
+				throw new EntityNotFoundException("No group found for name: " + name);
 			}
 			connection.commit();
 

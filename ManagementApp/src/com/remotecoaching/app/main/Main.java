@@ -1,21 +1,16 @@
 package com.remotecoaching.app.main;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import com.remotecoaching.app.models.Group;
-import com.remotecoaching.app.models.Role;
 import com.remotecoaching.app.models.User;
-import com.remotecoaching.app.persistence.GroupDataAccessObject;
-import com.remotecoaching.app.persistence.MyDataSource;
-import com.remotecoaching.app.persistence.RoleDataAccessObject;
-import com.remotecoaching.app.persistence.UserDataAccessObject;
+import com.remotecoaching.app.service.FileService;
+import com.remotecoaching.app.service.UserService;
 
 public class Main {
 
 	public static void main(String[] args) {
-		UserDataAccessObject userDataAccessObject = new UserDataAccessObject();
-		MyFile file = new MyFile();
+		UserService userDataAccessObject = new UserService();
+		MyFile file = new FileService();
 		List<User> usersList = userDataAccessObject.getAll();
 		for (User user : usersList) {
 			System.out.println(user);

@@ -7,9 +7,11 @@ import com.remotecoaching.app.exceptions.EntityNotFoundException;
 
 public interface DataAccessObjectGenericInterface<T, K extends Serializable> {
 
-	void create(T newInstance);
+	T create(T newInstance);
 
 	T get(K id) throws EntityNotFoundException;
+	
+	T getByName(String name) throws EntityNotFoundException;
 
 	List<T> getAll();
 

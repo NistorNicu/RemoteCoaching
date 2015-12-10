@@ -8,9 +8,6 @@ import com.remotecoaching.app.models.Role;
 import com.remotecoaching.app.models.User;
 
 public class Session {
-	public static final String PERMISSION_EXIST = "exist";
-	public static final String PERMISSION_READ = "read";
-	public static final String PERMISSION_WRITE = "write";
 	private static Session instance = new Session();
 	private static User sessionUser;
 
@@ -33,12 +30,5 @@ public class Session {
 		return sessionUser.getGroup().getRoles();
 	}
 
-	public boolean checkPermission(String permission) {
-		for (Role r : instance.sessionUser.getGroup().getRoles()) {
-			if (r.getName().equals(permission)) {
-				return true;
-			}
-		}
-		return false;
-	}
+	
 }
